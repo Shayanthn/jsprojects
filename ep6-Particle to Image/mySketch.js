@@ -1,5 +1,6 @@
-//Coded by Shayan Taherkhani shayantaherkhani.ir
+///Coded by Shayan Taherkhani
 ///IG : Coding1dea
+
 OPC.slider('curliness', 1, 0, 3);
 OPC.slider('velocity', 1, 0.1, 10);
 OPC.toggle('screenshot', false);
@@ -9,7 +10,7 @@ let particles = [];
 let edgeColour;
 
 function preload(){
-	img = loadImage("shayan.jpg");
+	img = loadImage("shayan.JPG");
 }
 
 function setup() {
@@ -41,7 +42,28 @@ function draw() {
     if(particles[i].pos.y < 0 || particles[i].pos.y > height 
 			                        || particles[i].pos.x < 0 
 			                        || particles[i].pos.x > width)
-		
+		{
+			
+      particles[i] = new Particle(edgeColour);
+    }
+    
+    particles[i].update(velocity);
+    particles[i].show();
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
