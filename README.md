@@ -6,7 +6,7 @@ This repository contains the source codes featured in the creative Instagram Ree
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/Shayanthn/js?style=social)](https://github.com/Shayanthn/js)
-[![Follow on Instagram](https://img.shields.io/badge/Instagram-shayan.thn-E4405F?logo=instagram&logoColor=white)](https://instagram.com/shayan.thn)
+[![Follow on Instagram](https://img.shields.io/badge/Instagram-shayan.thn-E4405F?logo=instagram&logoColor=white)](https://instagram.com/coding1dea)
 [![Join Telegram](https://img.shields.io/badge/Telegram-Join%20Channel-2CA5E0?logo=telegram&logoColor=white)](https://t.me/+BIJqCLmImYsxMmQx)
 [![YouTube](https://img.shields.io/badge/YouTube-shayanthn-FF0000?logo=youtube&logoColor=white)](https://youtube.com/@shayanthn)
 
@@ -27,7 +27,7 @@ This repository contains the source codes featured in the creative Instagram Ree
 ---
 
 ## Connect With Me
-- Instagram: [shayan.thn](https://instagram.com/shayan.thn)
+- Instagram: [shayan.thn](https://instagram.com/coding1dea)
 - Telegram: [Join Channel](https://t.me/+BIJqCLmImYsxMmQx)
 - YouTube: [shayanthn](https://youtube.com/@shayanthn) (for more creative coding styles)
 
@@ -42,15 +42,6 @@ This repository contains the source codes featured in the creative Instagram Ree
 
 ---
 
-## Quick Start
-
-1. Clone this repository:
-```bash
-git clone https://github.com/Shayanthn/js.git
-```
-2. Open the folder for the episode you want (e.g., ep1-sketch-stitch) and run the `index.html` file in your browser.
-
----
 
 ## License
 
