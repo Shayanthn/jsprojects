@@ -1,0 +1,403 @@
+/* 
+  ╔══════════════════════════════════════════════════╗
+  ║  DRIVE MAD - Custom Styles                       ║
+  ║  Coded by: Shayan Taherkhani                     ║
+  ║  Website: shayantaherkhani.ir                    ║
+  ║  Instagram: @Coding1dea                          ║
+  ╚══════════════════════════════════════════════════╝
+*/
+
+/* ========== ADVANCED ANIMATIONS ========== */
+
+@keyframes neonGlow {
+  0%, 100% {
+    text-shadow: 
+      0 0 10px #fff,
+      0 0 20px #fff,
+      0 0 30px #fff,
+      0 0 40px #0ff,
+      0 0 70px #0ff,
+      0 0 80px #0ff,
+      0 0 100px #0ff,
+      0 0 150px #0ff;
+  }
+  50% {
+    text-shadow: 
+      0 0 5px #fff,
+      0 0 10px #fff,
+      0 0 15px #fff,
+      0 0 20px #0ff,
+      0 0 35px #0ff,
+      0 0 40px #0ff,
+      0 0 50px #0ff,
+      0 0 75px #0ff;
+  }
+}
+
+@keyframes borderRun {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  10%, 30% { transform: scale(1.1); }
+  20%, 40% { transform: scale(0.9); }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes rotate3d {
+  from {
+    transform: perspective(1000px) rotateY(0deg);
+  }
+  to {
+    transform: perspective(1000px) rotateY(360deg);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ========== GLASS MORPHISM EFFECTS ========== */
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ========== NEON BUTTONS ========== */
+
+.neon-button {
+  position: relative;
+  display: inline-block;
+  padding: 15px 40px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  text-decoration: none;
+  font-size: 24px;
+  overflow: hidden;
+  transition: 0.5s;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+}
+
+.neon-button:hover {
+  background: linear-gradient(90deg, #03e9f4, #00f260, #f093fb);
+  color: #fff;
+  box-shadow: 
+    0 0 5px #03e9f4,
+    0 0 25px #03e9f4,
+    0 0 50px #03e9f4,
+    0 0 100px #03e9f4;
+  animation: neonGlow 1.5s ease-in-out infinite alternate;
+}
+
+.neon-button span {
+  position: absolute;
+  display: block;
+}
+
+/* ========== GRADIENT TEXT ========== */
+
+.gradient-text-1 {
+  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+  animation: borderRun 3s linear infinite;
+}
+
+.gradient-text-2 {
+  background: linear-gradient(90deg, #00f260, #0575e6, #00d2ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+  animation: borderRun 3s linear infinite;
+}
+
+.gradient-text-3 {
+  background: linear-gradient(90deg, #f093fb, #f5576c, #ffd89b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+  animation: borderRun 3s linear infinite;
+}
+
+/* ========== HOVER EFFECTS ========== */
+
+.hover-grow {
+  transition: all 0.3s ease;
+}
+
+.hover-grow:hover {
+  transform: scale(1.1);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+  filter: brightness(1.2);
+}
+
+.hover-rotate:hover {
+  transform: rotate(5deg);
+}
+
+.hover-slide-up {
+  transition: transform 0.3s ease;
+}
+
+.hover-slide-up:hover {
+  transform: translateY(-10px);
+}
+
+/* ========== LOADING ANIMATIONS ========== */
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top: 4px solid #fff;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.dots-loading span {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  margin: 0 5px;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.dots-loading span:nth-child(1) { animation-delay: -0.32s; }
+.dots-loading span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+/* ========== CARD EFFECTS ========== */
+
+.flip-card {
+  perspective: 1000px;
+  width: 300px;
+  height: 400px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+/* ========== PARTICLE SYSTEM ========== */
+
+.particle-small {
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  animation: float 4s infinite ease-in-out;
+}
+
+.particle-medium {
+  width: 4px;
+  height: 4px;
+  background: linear-gradient(45deg, #f093fb, #f5576c);
+  border-radius: 50%;
+  position: absolute;
+  animation: float 5s infinite ease-in-out;
+}
+
+.particle-large {
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(45deg, #00f260, #0575e6);
+  border-radius: 50%;
+  position: absolute;
+  animation: float 6s infinite ease-in-out;
+}
+
+/* ========== TOOLTIP ========== */
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  text-align: center;
+  border-radius: 10px;
+  padding: 10px 15px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ========== RESPONSIVE UTILITIES ========== */
+
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+  .show-mobile { display: block !important; }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop { display: none !important; }
+  .show-desktop { display: block !important; }
+}
+
+/* ========== UTILITY CLASSES ========== */
+
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.mt-1 { margin-top: 10px; }
+.mt-2 { margin-top: 20px; }
+.mt-3 { margin-top: 30px; }
+.mt-4 { margin-top: 40px; }
+.mt-5 { margin-top: 50px; }
+
+.mb-1 { margin-bottom: 10px; }
+.mb-2 { margin-bottom: 20px; }
+.mb-3 { margin-bottom: 30px; }
+.mb-4 { margin-bottom: 40px; }
+.mb-5 { margin-bottom: 50px; }
+
+.p-1 { padding: 10px; }
+.p-2 { padding: 20px; }
+.p-3 { padding: 30px; }
+.p-4 { padding: 40px; }
+.p-5 { padding: 50px; }
+
+/* ========== SOCIAL MEDIA BUTTONS ========== */
+
+.social-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin: 0 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.social-btn:hover {
+  transform: translateY(-5px) scale(1.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.social-instagram {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.social-twitter {
+  background: #1DA1F2;
+}
+
+.social-github {
+  background: #333;
+}
+
+.social-linkedin {
+  background: #0077b5;
+}
+
+/* ========== END OF CUSTOM STYLES ========== */
