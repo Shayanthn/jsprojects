@@ -1,0 +1,1656 @@
+<!-- Coded by Shayan Taherkhani  -->
+ <!-- shayantaherkhani.ir  -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Mashin gaming Simulator</title>
+    <!-- THREE.js for 3D rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GLTFLoader for loading 3D models -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- TONE.js for procedural audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Inter', sans-serif;
+            background-color: #cceeff; /* Light blue sky background */
+        }
+        canvas { display: block; }
+        
+        /* Score Display UI */
+        #score-display {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #ff9900; /* Bright orange for points */
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1001;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        /* Health Display UI */
+        #health-display {
+            position: fixed;
+            top: 10px;
+            left: 170px; /* Offset from score */
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #ef4444; /* Red default for health */
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1001;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        /* Fixed UI Container (Mobile Controls) */
+        #ui-container {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            padding: 10px 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        /* Controls Menu for displaying keyboard/mouse actions */
+        #controls-menu {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 250px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 14px;
+            line-height: 1.5;
+            z-index: 1001;
+        }
+        #controls-menu h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #4ade80; /* Tailwind green-400 */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 5px;
+        }
+        #controls-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #controls-menu li {
+            margin-bottom: 4px;
+        }
+        .key {
+            display: inline-block;
+            background-color: #374151; /* Tailwind gray-700 */
+            color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-family: monospace;
+            border-bottom: 2px solid #1f2937;
+        }
+        
+        /* Message Box for hints (like "Too far to enter car") */
+        #message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            background-color: #dc2626; /* Red-600 */
+            color: white;
+            border-radius: 8px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 1002;
+        }
+        
+        /* GAME OVER Overlay Styles */
+        #game-over-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            display: none; /* Starts hidden */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 3000;
+            font-family: 'Inter', sans-serif;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        #game-over-overlay h1 {
+            font-size: 5em;
+            color: #ef4444; /* Red-500 */
+            margin-bottom: 0.5em;
+            text-shadow: 0 0 20px #7f1d1d;
+        }
+
+        #game-over-overlay p {
+            font-size: 2em;
+            margin-bottom: 1.5em;
+            color: #fcd34d; /* Amber-300 */
+        }
+        
+        #restart-btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: #22c55e; /* Green-500 */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        #restart-btn:hover {
+            background-color: #16a34a; /* Green-600 */
+        }
+        
+        /* Group for direction controls (WASD/Arrows) for mobile */
+        #mobile-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+            gap: 5px;
+        }
+
+        .control-row { 
+            display: flex; 
+            justify-content: center;
+        }
+
+        /* Styling for the buttons (optimized for touch) */
+        button {
+            font-size: 16px; 
+            font-weight: bold;
+            padding: 15px 20px; 
+            margin: 5px;
+            touch-action: manipulation; 
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            color: white;
+            border: none; 
+            border-radius: 12px; /* Rounded corners */
+            width: 60px;
+            height: 60px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: background-color 0.1s, transform 0.1s;
+            cursor: pointer;
+        }
+
+        button:active {
+            background-color: #2563eb; /* Tailwind blue-600 */
+            transform: scale(0.95);
+        }
+
+        /* Audio Prompt Overlay Style */
+        #audio-prompt {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            background-color: #22c55e; /* Tailwind green-500 */
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            z-index: 2000;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Hide specific buttons on desktop (or use keyboard keys) */
+        @media (min-width: 768px) {
+            #ui-container {
+                display: none;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="score-display">Score: 0</div>
+    <div id="health-display">Health: 100</div>
+
+    <div id="controls-menu">
+        <h3 id="mode-title">Driving Controls</h3>
+        <ul id="control-list">
+            <!-- Content filled by JavaScript -->
+        </ul>
+        <p class="text-sm mt-3 text-red-400">🚨 Watch out for the 5 RED NPCs! They will shoot back and try to kill you if you're too close to the car. developed by shayan instagram : Coding1dea</p>
+    </div>
+
+    <!-- Message Box -->
+    <div id="message-box"></div>
+    
+    <!-- GAME OVER Overlay -->
+    <div id="game-over-overlay">
+        <h1>WASTED</h1>
+        <p id="final-score">Final Score: 0</p>
+        <button id="restart-btn" onclick="location.reload()">RESTART</button>
+    </div>
+
+    <div id="ui-container">
+        <div id="mobile-controls">
+            <!-- Forward/Backward Controls -->
+            <div class="control-row">
+                <button id="forward-btn" onpointerdown="keys.KeyW=true" onpointerup="keys.KeyW=false">▲</button>
+            </div>
+            <!-- Steering Controls -->
+            <div class="control-row">
+                <button id="left-btn" onpointerdown="keys.KeyA=true" onpointerup="keys.KeyA=false">◀</button>
+                <button id="backward-btn" onpointerdown="keys.KeyS=true" onpointerup="keys.KeyS=false">▼</button>
+                <button id="right-btn" onpointerdown="keys.KeyD=true" onpointerup="keys.KeyD=false">▶</button>
+            </div>
+            <!-- Jump/Shoot (context-dependent) -->
+            <div class="control-row">
+                <button id="action-btn" onpointerdown="keys.Space=true" onpointerup="keys.Space=false">★</button>
+                <button id="e-btn" onpointerdown="keys.KeyE=true" onpointerup="keys.KeyE=false">E</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global Variables and Setup ---
+        let scene, camera, renderer;
+        let car, carBody, wheels = [], wheelRims = [];
+        let train, groundSize;
+        let clouds = [];
+        let character; 
+        let keys = {};
+        
+        // --- Game State ---
+        let isDriving = true; 
+        let score = 0;
+        let isGameOver = false; 
+        const NPC_COUNT = 100;
+        const ENEMY_COUNT = 5; 
+        let npcs = []; 
+        let enemies = []; 
+        let playerHealth = 100; 
+        
+        // --- Collision Constants (Squared for performance) ---
+        const CAR_COLLISION_RADIUS_SQ = 7 * 7; 
+        const NPC_COLLISION_RADIUS = 2; 
+        const ENEMY_COLLISION_RADIUS = 3; 
+        const BULLET_COLLISION_RADIUS = 0.5; 
+        
+        // Combined radius squared for collision check
+        const BULLET_NPC_COLLISION_THRESHOLD_SQ = (NPC_COLLISION_RADIUS + BULLET_COLLISION_RADIUS) * (NPC_COLLISION_RADIUS + BULLET_COLLISION_RADIUS); 
+        const BULLET_ENEMY_COLLISION_THRESHOLD_SQ = (ENEMY_COLLISION_RADIUS + BULLET_COLLISION_RADIUS) * (ENEMY_COLLISION_RADIUS + BULLET_COLLISION_RADIUS); 
+        
+        // Carjacking/Kill distance check (Car radius + Enemy radius)^2 = (7 + 3)^2 = 100
+        const CARJACK_KILL_THRESHOLD_SQ = (7 + ENEMY_COLLISION_RADIUS) * (7 + ENEMY_COLLISION_RADIUS); 
+
+        const TRAIN_COLLISION_CAR_SQ = 16 * 16; 
+        const TRAIN_COLLISION_CHARACTER_SQ = 12 * 12; 
+        const PLAYER_CHARACTER_RADIUS_SQ = 3 * 3; // Character collision radius squared
+        
+        // Offset for character body height collision check (approx center of mass/body)
+        const CHARACTER_COLLISION_Y_OFFSET = 4.5; 
+
+        const CHARACTER_WALK_SPEED = 0.5;
+        const CHARACTER_TURN_SPEED = 0.08;
+        const ENTER_CAR_DISTANCE_SQ = 6 * 6; 
+
+        let bullets = []; 
+        let enemyBullets = []; 
+
+        // --- Tone.js Audio Variables ---
+        let isAudioContextStarted = false;
+        let carEngineSynth;
+        let trainWhistleSynth;
+        let bgmSynth;
+        let bgmLoop;
+        let lastWhistleIndex = -1; 
+        let gunSynth; 
+        let hitSynth; 
+        let crashSynth; 
+        
+        // Car physics parameters
+        const MAX_SPEED = 0.8;
+        const ACCELERATION = 0.05;
+        const DECELERATION = 0.02;
+        const STEER_SPEED = 0.04;
+        const WHEEL_ROTATION_SPEED = 0.08;
+        const MAX_STEER_ANGLE = Math.PI / 8;
+        
+        let speed = 0;
+        let trainAngle = 0;
+        
+        // Track constants
+        const TRAIN_TRACK_RADIUS = 150;
+        const CAR_TRACK_RADIUS = 80;
+        const TRAIN_SPEED = 0.005;
+        const SAFE_RADIUS = CAR_TRACK_RADIUS + 20; 
+
+        // Camera parameters
+        const cameraOffset = new THREE.Vector3(0, 10, -25); 
+        const characterCameraOffset = new THREE.Vector3(0, 10, -15); 
+        const cameraLookAt = new THREE.Vector3(0, 3, 0); 
+
+        let textureLoader; 
+
+        // --- UI Control Data ---
+        const DRIVING_CONTROLS = `
+            <li><span class="key">W / ▲</span>: Accelerate</li>
+            <li><span class="key">S / ▼</span>: Brake / Reverse</li>
+            <li><span class="key">A / ◀</span>: Steer Left</li>
+            <li><span class="key">D / ▶</span>: Steer Right</li>
+            <li><span class="key">E</span>: Exit Car</li>
+        `;
+
+        const WALKING_CONTROLS = `
+            <li><span class="key">W / ▲</span>: Forward</li>
+            <li><span class="key">S / ▼</span>: Backward</li>
+            <li><span class="key">A / ◀</span>: Strafe Left</li>
+            <li><span class="key">D / ▶</span>: Strafe Right</li>
+            <li><span class="key">Space / Click</span>: Shoot Gun</li>
+            <li><span class="key">E</span>: Enter Car (when close)</li>
+        `;
+
+        /**
+         * Updates the score and health displays in the UI.
+         */
+        function updateUI() {
+            document.getElementById('score-display').textContent = `Score: ${score}`;
+            const healthElement = document.getElementById('health-display');
+            healthElement.textContent = `Health: ${Math.max(0, playerHealth)}`;
+            
+            // Change color based on health level
+            if (playerHealth > 50) {
+                healthElement.style.color = '#10b981'; // Green
+            } else if (playerHealth > 20) {
+                healthElement.style.color = '#f59e0b'; // Yellow/Amber
+            } else {
+                healthElement.style.color = '#ef4444'; // Red
+            }
+
+            if (playerHealth <= 0 && !isGameOver) {
+                gameOver();
+            }
+        }
+
+        /**
+         * Shows a temporary message box in the center of the screen.
+         * @param {string} message 
+         * @param {number} durationMs 
+         */
+        function showMessage(message, durationMs = 1500) {
+            const box = document.getElementById('message-box');
+            box.textContent = message;
+            box.style.opacity = 1;
+            
+            // Determine color based on content
+            if (message.includes('Too far') || message.includes('Hit by Enemy')) {
+                box.style.backgroundColor = '#dc2626'; // Red
+            } else if (message.includes('Hostile Eliminated')) {
+                box.style.backgroundColor = '#f59e0b'; // Amber for killing enemy
+            } else if (message.includes('Eliminated') || message.includes('+')) {
+                box.style.backgroundColor = '#10b981'; // Green for generic NPC or score
+            } else if (message.includes('CARJACKED')) {
+                box.style.backgroundColor = '#ef4444'; // Bright Red for instant kill
+            } else {
+                box.style.backgroundColor = '#3b82f6'; // Blue default
+            }
+            
+            clearTimeout(window.messageTimeout);
+            window.messageTimeout = setTimeout(() => {
+                box.style.opacity = 0;
+            }, durationMs);
+        }
+
+        /**
+         * Updates the floating controls menu in the UI.
+         */
+        function updateControlsMenu() {
+            const modeTitle = document.getElementById('mode-title');
+            const controlList = document.getElementById('control-list');
+            const actionBtn = document.getElementById('action-btn');
+
+            if (isDriving) {
+                modeTitle.textContent = "Driving Controls";
+                controlList.innerHTML = DRIVING_CONTROLS;
+                if(actionBtn) actionBtn.textContent = 'B'; 
+            } else {
+                modeTitle.textContent = "Walking Controls (3rd Person)";
+                controlList.innerHTML = WALKING_CONTROLS;
+                if(actionBtn) actionBtn.textContent = '★'; 
+            }
+        }
+        
+        /**
+         * Generates a procedural checkerboard texture using two shades of green.
+         */
+        function generateGrassTexture() {
+            const canvas = document.createElement('canvas');
+            const size = 64; 
+            canvas.width = size;
+            canvas.height = size;
+            const context = canvas.getContext('2d');
+
+            const color1 = '#6aa84f';
+            const color2 = '#4f7833';
+
+            for (let x = 0; x < 2; x++) {
+                for (let y = 0; y < 2; y++) {
+                    context.fillStyle = (x + y) % 2 === 0 ? color1 : color2;
+                    context.fillRect(x * size / 2, y * size / 2, size / 2, size / 2);
+                }
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const repeatAmount = 100;
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(repeatAmount, repeatAmount);
+            texture.minFilter = THREE.NearestFilter;
+            texture.magFilter = THREE.NearestFilter;
+            texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+            return texture;
+        }
+
+        /**
+         * Initializes the Three.js scene, camera, and renderer.
+         */
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xcceeff); 
+            textureLoader = new THREE.TextureLoader();
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            sunLight.position.set(200, 300, 100);
+            sunLight.castShadow = true;
+            
+            const d = 500;
+            sunLight.shadow.camera.left = -d;
+            sunLight.shadow.camera.right = d;
+            sunLight.shadow.camera.top = d;
+            sunLight.shadow.camera.bottom = -d;
+            sunLight.shadow.camera.near = 1;
+            sunLight.shadow.camera.far = 1000;
+            sunLight.shadow.mapSize.width = 1024;
+            sunLight.shadow.mapSize.height = 1024;
+            scene.add(sunLight);
+
+            createWorld();
+
+            // Event Listeners
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            document.addEventListener('pointerdown', onPointerDown); 
+            
+            // Initial UI setup
+            updateControlsMenu();
+            updateUI();
+        }
+
+        /**
+         * Initializes all Tone.js synths, effects, and the background music loop.
+         */
+        function setupAudio() {
+            // 1. Car Engine Sound
+            carEngineSynth = new Tone.AMSynth({
+                harmonicity: 2,
+                oscillator: { type: "square" },
+                envelope: { attack: 0.1, decay: 0.2, sustain: 1, release: 0.5 },
+                modulation: { type: "sine" },
+                modulationEnvelope: { attack: 0.5, decay: 0, sustain: 1, release: 0.5 }
+            }).toDestination();
+            carEngineSynth.volume.value = -30; 
+
+            // 2. Train Whistle
+            trainWhistleSynth = new Tone.Synth({
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.1, decay: 0.5, sustain: 0.1, release: 0.5 }
+            }).toDestination();
+            trainWhistleSynth.volume.value = -10;
+
+            // 3. Gun Sound (for player)
+            gunSynth = new Tone.NoiseSynth({
+                noise: { type: "pink" },
+                envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 }
+            }).toDestination();
+            gunSynth.volume.value = -15;
+
+            // 4. NPC Hit Sound
+            hitSynth = new Tone.NoiseSynth({
+                noise: { type: "white" },
+                envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.1 }
+            }).toDestination();
+            hitSynth.volume.value = -5; 
+            
+            // 5. Crash Sound (Low frequency boom)
+            crashSynth = new Tone.MembraneSynth({
+                pitchDecay: 0.05,
+                octaves: 1,
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.5 },
+            }).toDestination();
+            crashSynth.volume.value = -5;
+
+
+            // 6. Background Music
+            bgmSynth = new Tone.Synth({
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 }
+            }).toDestination();
+            bgmSynth.volume.value = -20; 
+
+            // 7. Background Music Loop
+            const melody = ["C4", "E4", "G4", "A4"];
+            let noteIndex = 0;
+            
+            bgmLoop = new Tone.Loop(time => {
+                const note = melody[noteIndex % melody.length];
+                bgmSynth.triggerAttackRelease(note, "8n", time);
+                noteIndex++;
+            }, "4n"); 
+            
+            bgmLoop.start(0); 
+            Tone.Transport.start();
+        }
+
+        /**
+         * Creates all the world geometry (ground, car, train, clouds, trees).
+         */
+        function createWorld() {
+            groundSize = 800;
+            
+            const grassTexture = generateGrassTexture();
+
+            // Ground
+            const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                map: grassTexture, 
+                color: 0xffffff
+            }); 
+            
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Car Track (Road)
+            const carTrackGeometry = new THREE.TorusGeometry(CAR_TRACK_RADIUS, 10, 2, 100);
+            const carTrackMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 }); 
+            const carTrack = new THREE.Mesh(carTrackGeometry, carTrackMaterial);
+            carTrack.rotation.x = -Math.PI / 2;
+            carTrack.position.y = 0.01;
+            carTrack.receiveShadow = true;
+            scene.add(carTrack);
+
+            // Train Track
+            const trackGeometry = new THREE.TorusGeometry(TRAIN_TRACK_RADIUS, 5, 2, 100);
+            const trackMaterial = new THREE.MeshLambertMaterial({ color: 0x5d4037 }); 
+            const track = new THREE.Mesh(trackGeometry, trackMaterial);
+            track.rotation.x = -Math.PI / 2;
+            track.position.y = 0.1;
+            track.receiveShadow = true;
+            scene.add(track);
+
+            createCar();
+            createCharacter(); 
+            createTrain();
+            createTrees(100);
+            createClouds(20);
+            
+            // Create 100 regular (green) NPCs
+            for (let i = 0; i < NPC_COUNT; i++) {
+                createNPC();
+            }
+
+            // Create 5 hostile (red) NPCs
+            for (let i = 0; i < ENEMY_COUNT; i++) {
+                createEnemy();
+            }
+
+            camera.position.set(0, 50, 50);
+        }
+
+        /**
+         * Helper function to create a wireframe mesh.
+         * @param {THREE.Geometry} geometry 
+         * @param {number} yPos 
+         * @param {number} color - Hex color for wireframe
+         * @returns {THREE.LineSegments}
+         */
+        function createWireframeMesh(geometry, yPos, color) {
+            const wireMaterial = new THREE.LineBasicMaterial({ color: color, linewidth: 2 }); 
+            const wireframe = new THREE.WireframeGeometry(geometry);
+            const line = new THREE.LineSegments(wireframe, wireMaterial);
+            line.position.y = yPos;
+            return line;
+        }
+
+        /**
+         * Creates a single wireframe NPC (Cubesona) with basic AI state (Green).
+         */
+        function createNPC() {
+            const npc = new THREE.Group();
+            
+            const headGeo = new THREE.BoxGeometry(2, 2, 2);
+            const bodyGeo = new THREE.BoxGeometry(2, 4, 1);
+            const legGeo = new THREE.BoxGeometry(1, 3, 1);
+            
+            const wireColor = 0x00ff00; // Green
+
+            // Head, Body, Legs
+            npc.add(createWireframeMesh(headGeo, 7, wireColor));
+            npc.add(createWireframeMesh(bodyGeo, 4.5, wireColor));
+            const legL = createWireframeMesh(legGeo, 1.5, wireColor); legL.position.x = 0.5; npc.add(legL);
+            const legR = createWireframeMesh(legGeo, 1.5, wireColor); legR.position.x = -0.5; npc.add(legR);
+            
+            // --- Initial Positioning (Random, but away from tracks/roads) ---
+            let x, z;
+            do {
+                x = (Math.random() - 0.5) * groundSize * 0.9;
+                z = (Math.random() - 0.5) * groundSize * 0.9;
+            } while (Math.sqrt(x*x + z*z) < SAFE_RADIUS); 
+            
+            npc.position.set(x, 0, z);
+            
+            // --- AI State ---
+            npc.userData = {
+                isEnemy: false,
+                walkSpeed: 0.1,
+                direction: new THREE.Vector3(
+                    (Math.random() - 0.5), 0, (Math.random() - 0.5)
+                ).normalize(),
+                changeDirectionTimer: Math.random() * 100 + 100, 
+                radius: NPC_COLLISION_RADIUS, 
+            };
+
+            npcs.push(npc);
+            scene.add(npc);
+        }
+        
+        /**
+         * Creates a hostile red wireframe NPC (Enemy) with an internal state.
+         */
+        function createEnemy() {
+            const enemy = new THREE.Group();
+            
+            const headGeo = new THREE.BoxGeometry(2, 2, 2);
+            const bodyGeo = new THREE.BoxGeometry(2, 4, 1);
+            const legGeo = new THREE.BoxGeometry(1, 3, 1);
+            
+            const wireColor = 0xff0000; // Red
+
+            // Head, Body, Legs
+            enemy.add(createWireframeMesh(headGeo, 7, wireColor));
+            enemy.add(createWireframeMesh(bodyGeo, 4.5, wireColor));
+            const legL = createWireframeMesh(legGeo, 1.5, wireColor); legL.position.x = 0.5; enemy.add(legL);
+            const legR = createWireframeMesh(legGeo, 1.5, wireColor); legR.position.x = -0.5; enemy.add(legR);
+            
+            // --- Initial Positioning (Random, away from tracks/roads) ---
+            let x, z;
+            do {
+                x = (Math.random() - 0.5) * groundSize * 0.9;
+                z = (Math.random() - 0.5) * groundSize * 0.9;
+            } while (Math.sqrt(x*x + z*z) < SAFE_RADIUS); 
+            
+            enemy.position.set(x, 0, z);
+            
+            // --- AI State ---
+            enemy.userData = {
+                isEnemy: true,
+                walkSpeed: 0.2, // Slower than player
+                shootRangeSq: 150 * 150, // 150 units range squared
+                shootCooldown: 100,
+                currentCooldown: Math.random() * 100,
+                direction: new THREE.Vector3(0, 0, 0), 
+                radius: ENEMY_COLLISION_RADIUS, 
+                health: 3, // Takes 3 shots to kill
+            };
+
+            enemies.push(enemy);
+            scene.add(enemy);
+        }
+
+        /**
+         * Updates all NPC positions and AI logic.
+         */
+        function updateNPCs() {
+            npcs.forEach(npc => {
+                // 1. Movement
+                npc.position.x += npc.userData.direction.x * npc.userData.walkSpeed;
+                npc.position.z += npc.userData.direction.z * npc.userData.walkSpeed;
+                
+                const targetAngle = Math.atan2(npc.userData.direction.x, npc.userData.direction.z);
+                npc.rotation.y = targetAngle; 
+
+                // 2. Simple Boundary and Direction Change AI
+                npc.userData.changeDirectionTimer--;
+                
+                const isTooCloseToTrack = npc.position.distanceTo(new THREE.Vector3(0, 0, 0)) < SAFE_RADIUS;
+                const isTooFar = npc.position.distanceTo(new THREE.Vector3(0, 0, 0)) > groundSize * 0.45;
+                
+                if (npc.userData.changeDirectionTimer <= 0 || isTooCloseToTrack || isTooFar) {
+                    let newDir = npc.userData.direction;
+
+                    if (isTooCloseToTrack) {
+                        newDir = npc.position.clone().negate().normalize();
+                    } else if (isTooFar) {
+                        newDir = npc.position.clone().negate().normalize();
+                    } else {
+                        const angle = (Math.random() - 0.5) * Math.PI * 0.5; 
+                        newDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+                    }
+                    
+                    npc.userData.direction = newDir.normalize();
+                    npc.userData.changeDirectionTimer = Math.random() * 200 + 100;
+                }
+            });
+        }
+        
+        /**
+         * Updates all enemy positions, AI logic, and collision checks against the player.
+         */
+        function updateEnemies() {
+            const targetPos = isDriving ? car.position : character.position;
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                const enemyPos = enemy.position;
+                const distToTargetSq = enemyPos.distanceToSquared(targetPos);
+
+                // --- 1. Carjacking / Instant Kill Logic (GTA 3 Style) ---
+                if (isDriving && distToTargetSq < CARJACK_KILL_THRESHOLD_SQ) {
+                    // Player is forced out of the car
+                    isDriving = false; 
+                    character.position.copy(car.position);
+                    
+                    // Offset the character slightly away from the car so the enemy has space
+                    const offset = new THREE.Vector3(5, 0, 0); 
+                    offset.applyQuaternion(car.quaternion); 
+                    character.position.add(offset);
+
+                    character.visible = true;
+                    speed = 0;
+                    updateControlsMenu();
+                    if (isAudioContextStarted) carEngineSynth.volume.rampTo(-35, 0.5, Tone.now()); 
+                    
+                    showMessage("CARJACKED! WASTED!", 1500);
+                    
+                    // Immediate Game Over
+                    gameOver(); 
+                    return;
+                }
+
+                // --- 2. Movement Logic (Track Player) ---
+                const directionToTarget = targetPos.clone().sub(enemyPos).normalize();
+                
+                // Face the player (use lookAt for enemies for smoother rotation)
+                const lookAtPos = targetPos.clone();
+                lookAtPos.y = enemyPos.y; // Keep rotation only on Y-axis
+                enemy.lookAt(lookAtPos);
+                
+                // Move closer if outside 75 units (sqrt(150*150/4))
+                if (distToTargetSq > enemy.userData.shootRangeSq / 4) { 
+                    enemyPos.x += directionToTarget.x * enemy.userData.walkSpeed;
+                    enemyPos.z += directionToTarget.z * enemy.userData.walkSpeed;
+                }
+
+                // --- 3. Shooting Logic ---
+                enemy.userData.currentCooldown--;
+                if (enemy.userData.currentCooldown <= 0 && distToTargetSq < enemy.userData.shootRangeSq) {
+                    handleEnemyShooting(enemy);
+                    enemy.userData.currentCooldown = enemy.userData.shootCooldown + Math.random() * 50;
+                }
+            }
+        }
+
+        /**
+         * Checks for collision between the car and NPCs, handling hits and scoring.
+         */
+        function checkCarNPCHit() {
+            if (!isDriving || Math.abs(speed) < 0.1) return; 
+
+            const carPos = car.position;
+            const carRadiusSq = CAR_COLLISION_RADIUS_SQ;
+            const npcRadiusSq = NPC_COLLISION_RADIUS * NPC_COLLISION_RADIUS; 
+
+            // Check against generic NPCs
+            for (let i = npcs.length - 1; i >= 0; i--) {
+                const npc = npcs[i];
+                const npcPos = npc.position;
+                
+                const distanceSq = carPos.distanceToSquared(npcPos);
+                
+                if (distanceSq < carRadiusSq + npcRadiusSq) {
+                    scene.remove(npc);
+                    npcs.splice(i, 1);
+                    
+                    score += 100; 
+                    updateUI();
+                    
+                    if (isAudioContextStarted && hitSynth) {
+                        hitSynth.triggerAttackRelease("32n"); 
+                    }
+                    
+                    createNPC(); 
+                    
+                    showMessage("+100 Points! (Wireframe Neutralized by Car)", 800);
+                }
+            }
+            
+            // Check against hostile enemies (for scoring, although carjacking is likely faster)
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                const enemyPos = enemy.position;
+                
+                const distanceSq = carPos.distanceToSquared(enemyPos);
+                
+                if (distanceSq < carRadiusSq + npcRadiusSq) {
+                    // Car hit on enemy (instant kill)
+                    scene.remove(enemy);
+                    enemies.splice(i, 1);
+                    
+                    score += 200; 
+                    updateUI();
+                    
+                    if (isAudioContextStarted && hitSynth) {
+                        hitSynth.triggerAttackRelease("32n"); 
+                    }
+                    
+                    createEnemy(); // Respawn enemy
+                    
+                    showMessage("+200 Points! (Hostile Eliminated by Car)", 800);
+                }
+            }
+        }
+        
+        /**
+         * Checks for collision between the train and the car or character.
+         */
+        function checkTrainCollision() {
+            const trainPos = train.position;
+            let collisionThresholdSq = 0;
+            let distanceSq = 0;
+
+            if (isDriving) {
+                distanceSq = car.position.distanceToSquared(trainPos);
+                collisionThresholdSq = TRAIN_COLLISION_CAR_SQ;
+            } else {
+                distanceSq = character.position.distanceToSquared(trainPos);
+                collisionThresholdSq = TRAIN_COLLISION_CHARACTER_SQ;
+            }
+            
+            if (distanceSq < collisionThresholdSq) {
+                gameOver();
+            }
+        }
+
+        /**
+         * Handles the Game Over state.
+         */
+        function gameOver() {
+            if (isGameOver) return;
+            isGameOver = true;
+            
+            // 1. Stop Movement and Sounds
+            speed = 0;
+            for (const key in keys) { keys[key] = false; }
+            if (isAudioContextStarted) {
+                carEngineSynth.volume.rampTo(-50, 0.5, Tone.now());
+                if(bgmLoop) bgmLoop.stop();
+                if(crashSynth) crashSynth.triggerAttackRelease("C1", "1"); 
+            }
+            
+            // 2. Display Game Over Screen
+            const overlay = document.getElementById('game-over-overlay');
+            const finalScore = document.getElementById('final-score');
+            
+            finalScore.textContent = `Final Score: ${score}`;
+            overlay.style.display = 'flex';
+
+            // 3. Shake effect
+            const crashDuration = 1000;
+            const startTime = Date.now();
+
+            function shakeCamera() {
+                if (Date.now() - startTime < crashDuration) {
+                    const shakeIntensity = 0.5;
+                    camera.position.x += (Math.random() - 0.5) * shakeIntensity;
+                    camera.position.y += (Math.random() - 0.5) * shakeIntensity;
+                    requestAnimationFrame(shakeCamera);
+                }
+            }
+            shakeCamera();
+        }
+
+        /**
+         * Creates the player's car geometry.
+         */
+        function createCar() {
+            car = new THREE.Group();
+            const bodyGeometry = new THREE.BoxGeometry(5, 2, 10);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0xe53935 });
+            carBody = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            carBody.position.y = 3;
+            carBody.castShadow = true;
+            car.add(carBody);
+            const cabinGeometry = new THREE.BoxGeometry(4, 1.5, 4);
+            const cabinMaterial = new THREE.MeshLambertMaterial({ color: 0x81d4fa });
+            const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
+            cabin.position.set(0, 4.25, 1);
+            cabin.castShadow = true;
+            car.add(cabin);
+            const wheelPositions = [
+                { x: 2.8, z: 3.5 }, { x: -2.8, z: 3.5 },
+                { x: 2.8, z: -3.5 }, { x: -2.8, z: -3.5 } 
+            ];
+            const wheelGeometry = new THREE.CylinderGeometry(1.5, 1.5, 1, 12);
+            const wheelMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+            const rimMaterial = new THREE.MeshLambertMaterial({ color: 0xcccccc });
+            wheelPositions.forEach(pos => {
+                const wheelMesh = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                wheelMesh.rotation.z = Math.PI / 2;
+                wheelMesh.position.set(pos.x, 1.5, pos.z);
+                wheelMesh.castShadow = true;
+                wheels.push(wheelMesh);
+                car.add(wheelMesh);
+                const rimMesh = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.1, 8, 16), rimMaterial);
+                rimMesh.rotation.z = Math.PI / 2;
+                rimMesh.position.copy(wheelMesh.position);
+                wheelRims.push(rimMesh);
+                car.add(rimMesh);
+            });
+            scene.add(car);
+            car.position.x = CAR_TRACK_RADIUS; 
+            car.rotation.y = Math.PI; 
+            car.position.y = 1;
+        }
+        
+        /**
+         * Creates a blocky, Minecraft-style character with a gun.
+         */
+        function createCharacter() {
+            character = new THREE.Group();
+            const skinColor = new THREE.MeshLambertMaterial({ color: 0xffdbac }); 
+            const shirtColor = new THREE.MeshLambertMaterial({ color: 0x1e88e5 }); 
+            const pantColor = new THREE.MeshLambertMaterial({ color: 0x546e7a }); 
+            const gunColor = new THREE.MeshLambertMaterial({ color: 0x424242 }); 
+            const head = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), skinColor);
+            head.position.y = 7;
+            character.add(head);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 1), shirtColor);
+            body.position.y = 4.5;
+            character.add(body);
+            const legGeo = new THREE.BoxGeometry(1, 3, 1);
+            const legL = new THREE.Mesh(legGeo, pantColor);
+            legL.position.set(0.5, 1.5, 0);
+            character.add(legL);
+            const legR = new THREE.Mesh(legGeo, pantColor);
+            legR.position.set(-0.5, 1.5, 0);
+            character.add(legR);
+            const armGeo = new THREE.BoxGeometry(1, 3, 1);
+            const armL = new THREE.Mesh(armGeo, skinColor);
+            armL.position.set(1.5, 4.5, 0);
+            armL.userData.isArm = true; 
+            character.add(armL);
+            const armR = new THREE.Mesh(armGeo, skinColor);
+            armR.position.set(-1.5, 4.5, 0);
+            armR.userData.isArm = true;
+            character.add(armR);
+            const gun = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 3), gunColor);
+            gun.position.set(-1.5, 4.5, 1.5);
+            gun.rotation.x = Math.PI / 2; 
+            character.add(gun);
+            character.position.set(CAR_TRACK_RADIUS, 0, 0); 
+            character.visible = false; 
+            character.castShadow = true;
+            scene.add(character);
+        }
+
+        /**
+         * Creates the train geometry.
+         */
+        function createTrain() {
+            train = new THREE.Group();
+            const engineBodyGeometry = new THREE.BoxGeometry(8, 5, 15);
+            const engineBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x0066cc }); 
+            const engineBody = new THREE.Mesh(engineBodyGeometry, engineBodyMaterial);
+            engineBody.position.y = 2.5;
+            engineBody.castShadow = true;
+            train.add(engineBody);
+            const cabinGeometry = new THREE.BoxGeometry(6, 4, 4);
+            const cabinMaterial = new THREE.MeshLambertMaterial({ color: 0xcc0000 });
+            const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
+            cabin.position.set(0, 5.5, 5);
+            cabin.castShadow = true;
+            train.add(cabin);
+            const chimneyGeometry = new THREE.CylinderGeometry(1, 1.5, 4, 16);
+            const chimneyMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+            const chimney = new THREE.Mesh(chimneyGeometry, chimneyMaterial);
+            chimney.position.set(0, 6, -5);
+            chimney.castShadow = true;
+            train.add(chimney);
+            trainAngle = Math.PI / 2;
+            train.position.x = TRAIN_TRACK_RADIUS * Math.cos(trainAngle);
+            train.position.z = TRAIN_TRACK_RADIUS * Math.sin(trainAngle);
+            train.position.y = 2.5;
+            scene.add(train);
+        }
+
+        // Dummy world object creation (omitted for brevity)
+        function createTree(x, z) {
+            const tree = new THREE.Group();
+            const trunkGeometry = new THREE.CylinderGeometry(1, 1, 10, 8);
+            const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+            const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+            trunk.position.y = 5;
+            trunk.castShadow = true;
+            tree.add(trunk);
+            const leavesGeometry = new THREE.ConeGeometry(5, 15, 8);
+            const leavesMaterial = new THREE.MeshLambertMaterial({ color: 0x008000 });
+            const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+            leaves.position.y = 15;
+            leaves.castShadow = true;
+            tree.add(leaves);
+            tree.position.set(x, 0, z);
+            scene.add(tree);
+        }
+        function createTrees(count) {
+            for (let i = 0; i < count; i++) {
+                let x, z;
+                do {
+                    x = (Math.random() - 0.5) * groundSize * 0.9;
+                    z = (Math.random() - 0.5) * groundSize * 0.9;
+                } while (Math.sqrt(x*x + z*z) < CAR_TRACK_RADIUS + 20 && Math.sqrt(x*x + z*z) > CAR_TRACK_RADIUS - 20); 
+                createTree(x, z);
+            }
+        }
+        function createCloud(x, z) {
+            const cloudGeometry = new THREE.CircleGeometry(20, 16);
+            const cloudMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffffff, transparent: true, opacity: 0.8, side: THREE.DoubleSide
+            });
+            const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+            cloud.rotation.x = -Math.PI / 2;
+            cloud.position.set(x, 70, z);
+            cloud.userData.speed = Math.random() * 0.1 + 0.05; 
+            clouds.push(cloud);
+            scene.add(cloud);
+        }
+        function createClouds(count) {
+            for (let i = 0; i < count; i++) {
+                const x = (Math.random() - 0.5) * groundSize * 2;
+                const z = (Math.random() - 0.5) * groundSize * 2;
+                createCloud(x, z);
+            }
+        }
+
+        // --- Event Handlers ---
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onKeyDown(event) {
+            if (isGameOver) return; 
+            keys[event.code] = true;
+
+            if (event.code === 'KeyE') {
+                if (isDriving) {
+                    character.position.copy(car.position);
+                    const offset = new THREE.Vector3(5, 0, 0); 
+                    offset.applyQuaternion(car.quaternion); 
+                    character.position.add(offset);
+                    character.rotation.y = car.rotation.y;
+                    character.visible = true;
+                    speed = 0; 
+                    if (isAudioContextStarted) carEngineSynth.volume.rampTo(-35, 0.5, Tone.now()); 
+                    showMessage("Exited Car! (Press E near it to re-enter)", 2000);
+                    isDriving = false; 
+                } else {
+                    const distanceSq = character.position.distanceToSquared(car.position);
+                    
+                    if (distanceSq < ENTER_CAR_DISTANCE_SQ) {
+                        character.visible = false;
+                        car.position.copy(character.position);
+                        car.rotation.y = character.rotation.y + Math.PI; 
+                        showMessage("Entered Car!", 1500);
+                        isDriving = true;
+                    } else {
+                        showMessage("Too far from the car to enter (Need to be within 6 units).", 2500);
+                    }
+                }
+                updateControlsMenu(); 
+            }
+
+            if (!isDriving && (event.code === 'Space')) {
+                // KeyUp will be handled by the touch control logic if this is mobile
+                if (event.code === 'Space' && !keys.Space_handled) { 
+                    handlePlayerShooting();
+                    keys.Space_handled = true;
+                }
+            }
+        }
+
+        function onKeyUp(event) {
+            if (isGameOver) return; 
+            keys[event.code] = false;
+            if (event.code === 'Space') {
+                keys.Space_handled = false;
+            }
+        }
+
+        function onPointerDown(event) {
+            if (isGameOver) return; 
+            // Check if click/tap is not on a mobile button
+            if (event.target.tagName !== 'BUTTON' && !isDriving) {
+                handlePlayerShooting();
+            }
+        }
+
+        // --- Audio Logic ---
+        
+        function updateEngineSound() {
+            if (!isAudioContextStarted || !carEngineSynth) return;
+            const absoluteSpeed = Math.abs(speed);
+            const minFreq = 130.81; 
+            const maxFreq = 391.99; 
+            const frequency = minFreq + (maxFreq - minFreq) * (absoluteSpeed / MAX_SPEED);
+            const minVol = -35;
+            const maxVol = -10;
+            const volume = minVol + (maxVol - minVol) * (absoluteSpeed / MAX_SPEED);
+            if (absoluteSpeed > 0.01) {
+                if (carEngineSynth.state !== 'started') {
+                    carEngineSynth.triggerAttack(frequency);
+                } else {
+                    carEngineSynth.set({ frequency: frequency });
+                }
+                carEngineSynth.volume.rampTo(volume, 0.1, Tone.now());
+            } else {
+                carEngineSynth.volume.rampTo(minVol, 0.5, Tone.now());
+                carEngineSynth.set({ frequency: minFreq });
+            }
+        }
+
+        /**
+         * Creates a player bullet and launches it from the character's gun.
+         */
+        function handlePlayerShooting() {
+            if (!isAudioContextStarted || !gunSynth) return;
+            gunSynth.volume.value = -15; // Ensure player volume is correct
+            gunSynth.triggerAttackRelease("16n");
+            
+            const bulletGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+            const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
+            
+            const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(character.quaternion);
+            bullet.position.copy(character.position);
+            bullet.position.y += CHARACTER_COLLISION_Y_OFFSET; // Fire from chest height
+            
+            const rightOffset = new THREE.Vector3(-1.5, 0, 0); 
+            rightOffset.applyQuaternion(character.quaternion);
+            bullet.position.add(rightOffset);
+
+            bullet.position.add(forward.clone().multiplyScalar(2)); 
+            
+            bullet.userData.velocity = forward.multiplyScalar(2.5); 
+            
+            bullets.push(bullet);
+            scene.add(bullet);
+        }
+        
+        /**
+         * Creates an enemy bullet and launches it towards the player.
+         * @param {THREE.Group} enemy - The enemy firing the bullet.
+         */
+        function handleEnemyShooting(enemy) {
+            if (!isAudioContextStarted || !gunSynth) return;
+            // Lower frequency/volume for enemy gun
+            gunSynth.volume.value = -25;
+            gunSynth.triggerAttackRelease("16n", Tone.now() + 0.05);
+            gunSynth.volume.value = -15; // Reset player gun volume
+
+            const bulletGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+            const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xff4500 }); // Orange-Red bullet
+
+            const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
+            
+            // Calculate direction towards the player's current position
+            const target = isDriving ? car.position : character.position;
+            const direction = target.clone().sub(enemy.position).normalize();
+            
+            // Set initial position (from enemy chest height)
+            bullet.position.copy(enemy.position);
+            bullet.position.y += CHARACTER_COLLISION_Y_OFFSET; 
+            bullet.position.add(direction.clone().multiplyScalar(2)); 
+            
+            bullet.userData.velocity = direction.multiplyScalar(2.0); // Slightly slower bullets
+            
+            enemyBullets.push(bullet);
+            scene.add(bullet);
+        }
+
+        /**
+         * Updates the position of all active player bullets and checks for NPC/Enemy collisions.
+         */
+        function updateBullets() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                bullet.position.add(bullet.userData.velocity);
+
+                const bulletPos = bullet.position;
+
+                // 1. Check Culling (distance check)
+                if (bullet.position.distanceTo(character.position) > 300) {
+                    scene.remove(bullet);
+                    bullets.splice(i, 1);
+                    continue; 
+                }
+                
+                // --- 2. Check Player Bullets vs HOSTILE ENEMY NPCS ---
+                let hitEnemy = false;
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const enemy = enemies[j];
+                    const enemyPos = enemy.position;
+                    
+                    // FIXED: Calculate distance only in X and Z plane
+                    const dx = bulletPos.x - enemyPos.x;
+                    const dz = bulletPos.z - enemyPos.z;
+                    const distanceSq = dx * dx + dz * dz; 
+
+                    if (distanceSq < BULLET_ENEMY_COLLISION_THRESHOLD_SQ) {
+                        // Collision with Enemy!
+                        scene.remove(bullet);
+                        bullets.splice(i, 1); 
+                        i--; // Decrement i for safe splice of bullet
+                        hitEnemy = true;
+
+                        // Damage Enemy
+                        enemy.userData.health--;
+
+                        if (enemy.userData.health <= 0) {
+                            // Enemy ELIMINATED
+                            scene.remove(enemy);
+                            enemies.splice(j, 1);
+                            score += 200; // Higher score for hostile NPCs
+                            createEnemy(); // Respawn the enemy immediately
+
+                            showMessage("+200 Points! Hostile Eliminated!", 800);
+                        } else {
+                            showMessage("Enemy Hit! Health: " + enemy.userData.health, 800);
+                        }
+                        
+                        if (isAudioContextStarted && hitSynth) {
+                            hitSynth.triggerAttackRelease("16n", Tone.now()); 
+                        }
+                        
+                        break; // Bullet is gone, move to the next bullet
+                    }
+                }
+                if (hitEnemy) continue;
+
+
+                // --- 3. Check Player Bullets vs GENERIC NPCS ---
+                for (let j = npcs.length - 1; j >= 0; j--) {
+                    const npc = npcs[j];
+                    const npcPos = npc.position;
+                    
+                    const dx = bulletPos.x - npcPos.x;
+                    const dz = bulletPos.z - npcPos.z;
+                    const distanceSq = dx * dx + dz * dz; 
+
+                    if (distanceSq < BULLET_NPC_COLLISION_THRESHOLD_SQ) {
+                        // Collision!
+                        scene.remove(bullet);
+                        bullets.splice(i, 1);
+                        
+                        scene.remove(npc);
+                        npcs.splice(j, 1);
+                        
+                        score += 50;
+                        updateUI();
+                        if (isAudioContextStarted && hitSynth) {
+                            hitSynth.triggerAttackRelease("16n", Tone.now()); 
+                        }
+                        showMessage("+50 Points! (Target Eliminated)", 800);
+
+                        createNPC();
+
+                        i--; 
+                        break; 
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Updates the position of all active enemy bullets and checks for player/car collisions.
+         */
+        function updateEnemyBullets() {
+            if (playerHealth <= 0) return;
+
+            const playerTarget = isDriving ? car : character;
+            const playerRadiusSq = isDriving ? CAR_COLLISION_RADIUS_SQ : PLAYER_CHARACTER_RADIUS_SQ; 
+
+            // Calculate the actual point in space for collision checking
+            const targetCollisionPosition = playerTarget.position.clone();
+
+            if (!isDriving) {
+                // BUG FIX: Adjust the collision check position to the character's body center (Y≈4.5)
+                targetCollisionPosition.y += CHARACTER_COLLISION_Y_OFFSET; 
+            }
+            // For the car, position.y is already 1, which is a good center for a sphere radius 7.
+
+
+            for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                const bullet = enemyBullets[i];
+                bullet.position.add(bullet.userData.velocity);
+
+                // 1. Check Culling
+                if (bullet.position.distanceTo(playerTarget.position) > 300) {
+                    scene.remove(bullet);
+                    enemyBullets.splice(i, 1);
+                    continue; 
+                }
+
+                // 2. Collision Check 
+                // Use the adjusted target collision position
+                const distToTargetSq = bullet.position.distanceToSquared(targetCollisionPosition);
+
+                if (distToTargetSq < playerRadiusSq) {
+                    // Hit detected!
+                    scene.remove(bullet);
+                    enemyBullets.splice(i, 1);
+                    
+                    playerHealth -= 10;
+                    updateUI();
+                    
+                    if (isAudioContextStarted && hitSynth) {
+                        hitSynth.triggerAttackRelease("64n", Tone.now()); 
+                    }
+                    
+                    showMessage("-10 HP! Hit by Enemy Fire!", 800);
+
+                    if (playerHealth <= 0) {
+                        gameOver();
+                    }
+                    i--; 
+                }
+            }
+        }
+
+        
+        // --- Game Loop and Physics ---
+        
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isGameOver) return; 
+
+            if (isDriving) {
+                updateCarPhysics();
+                updateCarVisuals();
+                updateEngineSound();
+                checkCarNPCHit(); 
+            } else {
+                updateCharacterPhysics();
+            }
+
+            updateTrain();
+            checkTrainCollision(); 
+            updateClouds();
+            updateBullets(); 
+            
+            updateNPCs(); 
+            updateEnemies(); 
+            updateEnemyBullets(); 
+            
+            updateCamera();
+            updateUI(); 
+
+            renderer.render(scene, camera);
+        }
+
+        /**
+         * Updates the car's speed and position based on key input.
+         */
+        function updateCarPhysics() {
+            if (keys.KeyW || keys.ArrowUp) {
+                speed = Math.min(speed + ACCELERATION, MAX_SPEED);
+            } else if (keys.KeyS || keys.ArrowDown) {
+                speed = Math.max(speed - ACCELERATION, -MAX_SPEED * 0.5); 
+            } else {
+                if (speed > 0) {
+                    speed = Math.max(0, speed - DECELERATION);
+                } else if (speed < 0) {
+                    speed = Math.min(0, speed + DECELERATION);
+                }
+            }
+            if (keys.KeyA || keys.ArrowLeft) {
+                car.rotation.y += STEER_SPEED;
+            }
+            if (keys.KeyD || keys.ArrowRight) {
+                car.rotation.y -= STEER_SPEED;
+            }
+            car.position.x += Math.sin(car.rotation.y) * speed;
+            car.position.z += Math.cos(car.rotation.y) * speed;
+        }
+
+        /**
+         * Updates the character's movement and rotation.
+         */
+        function updateCharacterPhysics() {
+            let moveX = 0;
+            let moveZ = 0;
+            let moving = false;
+            const cameraDirection = new THREE.Vector3();
+            camera.getWorldDirection(cameraDirection);
+            cameraDirection.y = 0; 
+            cameraDirection.normalize();
+            const sideDirection = new THREE.Vector3().crossVectors(cameraDirection, new THREE.Vector3(0, 1, 0)).normalize();
+            if (keys.KeyW || keys.ArrowUp) {
+                moveX += cameraDirection.x;
+                moveZ += cameraDirection.z;
+                moving = true;
+            }
+            if (keys.KeyS || keys.ArrowDown) {
+                moveX -= cameraDirection.x;
+                moveZ -= cameraDirection.z;
+                moving = true;
+            }
+            if (keys.KeyA || keys.ArrowLeft) {
+                moveX -= sideDirection.x;
+                moveZ -= sideDirection.z;
+                moving = true;
+            }
+            if (keys.KeyD || keys.ArrowRight) {
+                moveX += sideDirection.x;
+                moveZ += sideDirection.z;
+                moving = true;
+            }
+            if (moving) {
+                let direction = new THREE.Vector3(moveX, 0, moveZ).normalize();
+                character.position.x += direction.x * CHARACTER_WALK_SPEED;
+                character.position.z += direction.z * CHARACTER_WALK_SPEED;
+                const targetAngle = Math.atan2(direction.x, direction.z);
+                character.rotation.y = THREE.MathUtils.lerp(character.rotation.y, targetAngle, CHARACTER_TURN_SPEED);
+            }
+            if (moving) {
+                const time = Date.now() * 0.005;
+                character.traverse(child => {
+                    if (child.userData.isArm) {
+                        const swing = Math.sin(time) * 0.3;
+                        if (child.position.x > 0) {
+                            child.rotation.x = swing; 
+                        } else {
+                            child.rotation.x = -swing; 
+                        }
+                    }
+                });
+            }
+            character.position.y = 0;
+        }
+
+        /**
+         * Updates visual elements of the car like steering tilt and wheel rotation.
+         */
+        function updateCarVisuals() {
+            const wheelRotationSpeed = WHEEL_ROTATION_SPEED;
+            let targetCarTilt = 0;
+            if (Math.abs(speed) > 0.05) {
+                if (keys.KeyA || keys.ArrowLeft) {
+                    targetCarTilt = -MAX_STEER_ANGLE;
+                } else if (keys.KeyD || keys.ArrowRight) {
+                    targetCarTilt = MAX_STEER_ANGLE;
+                }
+            }
+            carBody.rotation.z = THREE.MathUtils.lerp(carBody.rotation.z, targetCarTilt, 0.1);
+            wheels.forEach(wheel => {
+                wheel.rotation.x -= speed * wheelRotationSpeed;
+            });
+            wheelRims.forEach(rim => {
+                rim.rotation.x = wheels[wheelRims.indexOf(rim)].rotation.x;
+            });
+            car.position.y = 1; 
+        }
+
+        /**
+         * Updates the train's position and orientation on the circular track and triggers the whistle.
+         */
+        function updateTrain() {
+            trainAngle += TRAIN_SPEED;
+            train.position.x = TRAIN_TRACK_RADIUS * Math.cos(trainAngle);
+            train.position.z = TRAIN_TRACK_RADIUS * Math.sin(trainAngle);
+            const lookAtX = TRAIN_TRACK_RADIUS * Math.cos(trainAngle + 0.01);
+            const lookAtZ = TRAIN_TRACK_RADIUS * Math.sin(trainAngle + 0.01);
+            train.lookAt(lookAtX, train.position.y, lookAtZ);
+            
+            if (isAudioContextStarted) {
+                const normalizedAngle = trainAngle % (2 * Math.PI); 
+                const currentSegment = Math.floor(normalizedAngle / (Math.PI / 2));
+                if (currentSegment !== lastWhistleIndex) {
+                    trainWhistleSynth.triggerAttackRelease("A3", "0.5", Tone.now());
+                    lastWhistleIndex = currentSegment;
+                }
+            }
+        }
+
+        /**
+         * Updates cloud movement for simple visual effect.
+         */
+        function updateClouds() {
+            clouds.forEach(cloud => {
+                cloud.position.x -= cloud.userData.speed;
+                if (cloud.position.x < -groundSize / 2 - 100) {
+                    cloud.position.x = groundSize / 2 + 100;
+                    cloud.position.z = (Math.random() - 0.5) * groundSize * 2;
+                }
+            });
+        }
+
+        /**
+         * Updates the camera position to follow the active object (car or character).
+         */
+        function updateCamera() {
+            let targetObject, offsetVector;
+            if (isDriving) {
+                targetObject = car;
+                offsetVector = cameraOffset;
+            } else {
+                targetObject = character;
+                offsetVector = characterCameraOffset;
+            }
+            const relativeCameraOffset = offsetVector.clone().applyQuaternion(targetObject.quaternion);
+            const targetCameraPosition = targetObject.position.clone().add(relativeCameraOffset);
+            camera.position.lerp(targetCameraPosition, 0.1);
+            const targetLookAt = targetObject.position.clone().add(cameraLookAt);
+            camera.lookAt(targetLookAt);
+        }
+        
+        /**
+         * Starts the Tone.js audio context on user interaction.
+         */
+        function startAudioContext() {
+            if (Tone.context.state !== 'running') {
+                Tone.start();
+            }
+            isAudioContextStarted = true;
+
+            const prompt = document.getElementById('audio-prompt');
+            if (prompt) {
+                prompt.style.opacity = 0;
+                setTimeout(() => prompt.remove(), 300);
+            }
+        }
+
+        // --- Initialization and Start ---
+        window.onload = function () {
+            init();
+            setupAudio(); 
+            animate();
+            
+            // Prompt user to enable audio (required for browsers)
+            const prompt = document.createElement('div');
+            prompt.id = 'audio-prompt';
+            prompt.innerHTML = "Click to Start Audio (Engine, Train, Gun, Music)";
+            prompt.onclick = startAudioContext;
+            document.body.appendChild(prompt);
+        };
+
+    </script>
+</body>
+</html>
