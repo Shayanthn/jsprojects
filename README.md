@@ -29,6 +29,7 @@ This repository contains the source codes featured in the creative Instagram Ree
 | EP9 | Ultimate 3D Car Driving | Three.js | Immersive 3D car driving simulator |
 | EP10 | Drivema 4x4 Challenge | HTML, CSS | Web-based 4x4 driving game |
 | EP11 | 🔥 **3D Shoe Finder** | **React, Three.js, Next.js** | **Interactive 3D shoe browser with holographic effects** |
+| EP12 | Flower Animation | HTML, CSS, JavaScript | Canvas-based animated flower with layered rotating petals |
 
 ---
 
